@@ -1,154 +1,344 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 export default function SetupAccountPage() {
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [email, setEmail] =
+  const [cedula, setCedula] =
     useState("");
 
-  useEffect(() => {
+  const [fullName, setFullName] =
+    useState("");
 
-    const loadUser = async () => {
+  const [cargo, setCargo] =
+    useState("");
 
-      try {
+  const [empresa, setEmpresa] =
+    useState("Zofranca");
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+  const [contractType, setContractType] =
+    useState("Indefinido");
 
-        if (session?.user?.email) {
+  const [sede, setSede] =
+    useState("");
 
-          setEmail(
-            session.user.email
-          );
-        }
+  const [departamento, setDepartamento] =
+    useState("");
 
-      } catch (error) {
+  const [area, setArea] =
+    useState("");
 
-        console.log(error);
-      }
-
-      setLoading(false);
-    };
-
-    loadUser();
-
-  }, []);
-
-  if (loading) {
-
-    return (
-
-      <div className="
-        flex
-        min-h-screen
-        items-center
-        justify-center
-      ">
-
-        <p>
-          Cargando...
-        </p>
-
-      </div>
-    );
-  }
+  const [userLevel, setUserLevel] =
+    useState("Analista");
 
   return (
 
     <div className="
       min-h-screen
-      bg-gray-100
+      bg-[#f5f6f8]
       p-6
     ">
 
       <div className="
         mx-auto
-        max-w-3xl
+        max-w-5xl
       ">
 
         <div className="
-          rounded-2xl
+          rounded-3xl
+          border
+          border-gray-200
           bg-white
-          p-8
+          p-10
           shadow-sm
         ">
 
-          <h1 className="
-            text-3xl
-            font-bold
-          ">
-            Configurar cuenta
-          </h1>
-
-          <p className="
-            mt-2
-            text-gray-500
-          ">
-            Completa tu perfil empresarial
-          </p>
+          {/* HEADER */}
 
           <div className="
-            mt-8
+            mb-10
+          ">
+
+            <h1 className="
+              text-4xl
+              font-bold
+              tracking-tight
+              text-gray-900
+            ">
+              Configurar cuenta
+            </h1>
+
+            <p className="
+              mt-2
+              text-sm
+              text-gray-500
+            ">
+              Completa tu perfil empresarial
+            </p>
+
+          </div>
+
+          {/* FORM */}
+
+          <div className="
             grid
             gap-5
             md:grid-cols-2
           ">
 
             <input
+              type="text"
               placeholder="Cédula"
+              value={cedula}
+              onChange={(e) =>
+                setCedula(
+                  e.target.value
+                )
+              }
               className="
-                rounded-xl
+                h-14
+                rounded-2xl
                 border
-                p-3
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
               "
             />
 
             <input
+              type="text"
               placeholder="Nombre completo"
+              value={fullName}
+              onChange={(e) =>
+                setFullName(
+                  e.target.value
+                )
+              }
               className="
-                rounded-xl
+                h-14
+                rounded-2xl
                 border
-                p-3
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
               "
             />
 
             <input
-              value={email}
-              disabled
-              className="
-                rounded-xl
-                border
-                bg-gray-50
-                p-3
-              "
-            />
-
-            <input
+              type="text"
               placeholder="Cargo"
+              value={cargo}
+              onChange={(e) =>
+                setCargo(
+                  e.target.value
+                )
+              }
               className="
-                rounded-xl
+                h-14
+                rounded-2xl
                 border
-                p-3
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
               "
             />
+
+            <select
+              value={empresa}
+              onChange={(e) =>
+                setEmpresa(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            >
+
+              <option>
+                Zofranca
+              </option>
+
+              <option>
+                SP Dique
+              </option>
+
+            </select>
+
+            <select
+              value={contractType}
+              onChange={(e) =>
+                setContractType(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            >
+
+              <option>
+                Indefinido
+              </option>
+
+              <option>
+                Fijo
+              </option>
+
+              <option>
+                Temporal
+              </option>
+
+              <option>
+                Prestación de servicios
+              </option>
+
+            </select>
+
+            <input
+              type="text"
+              placeholder="Sede"
+              value={sede}
+              onChange={(e) =>
+                setSede(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            />
+
+            <input
+              type="text"
+              placeholder="Departamento"
+              value={departamento}
+              onChange={(e) =>
+                setDepartamento(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            />
+
+            <input
+              type="text"
+              placeholder="Área"
+              value={area}
+              onChange={(e) =>
+                setArea(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            />
+
+            <select
+              value={userLevel}
+              onChange={(e) =>
+                setUserLevel(
+                  e.target.value
+                )
+              }
+              className="
+                h-14
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+                text-sm
+                outline-none
+                focus:border-black
+              "
+            >
+
+              <option>
+                Super Admin
+              </option>
+
+              <option>
+                Administrador
+              </option>
+
+              <option>
+                Líder
+              </option>
+
+              <option>
+                Coordinador
+              </option>
+
+              <option>
+                Analista
+              </option>
+
+              <option>
+                Consulta
+              </option>
+
+            </select>
 
           </div>
 
+          {/* BUTTON */}
+
           <button
             className="
-              mt-8
-              rounded-xl
+              mt-10
+              h-14
+              rounded-2xl
               bg-black
-              px-6
-              py-3
+              px-8
+              text-sm
+              font-medium
               text-white
+              transition-all
+              hover:opacity-90
             "
           >
             Finalizar registro
