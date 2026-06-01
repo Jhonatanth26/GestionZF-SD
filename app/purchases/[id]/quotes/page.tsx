@@ -392,7 +392,11 @@ async function updateQuoteItem(
   // UPDATE UI
   // ============================================
 
-  setQuotes(updatedQuotes);
+setQuotes(
+  JSON.parse(
+    JSON.stringify(updatedQuotes)
+  )
+);
 
   // ============================================
   // FIND UPDATED ITEM
