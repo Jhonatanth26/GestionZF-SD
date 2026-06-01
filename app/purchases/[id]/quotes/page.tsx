@@ -292,93 +292,165 @@ export default function PurchaseQuotesPage() {
   // UPDATE ITEM
   // =====================================================
 
-  async function updateQuoteItem(
-    itemId: string,
-    field: string,
-    value: any
-  ) {
+async function updateQuoteItem(
+  itemId: string,
+  field: string,
+  value: any
+) {
 
-    const currentItem =
+  // ============================================
+  // UPDATE LOCAL STATE
+  // ============================================
 
-      quotes
+  const updatedQuotes = quotes.map(
+    (quote) => ({
 
-        .flatMap((q) => q.purchase_quote_items)
+      ...quote,
 
-        .find(
-          (item: any) =>
-            item.id === itemId
-        );
+      purchase_quote_items:
+        quote.purchase_quote_items.map(
+          (item: any) => {
 
-    const updatedData: any = {
-      [field]: value,
-    };
+            if (item.id !== itemId) {
+              return item;
+            }
 
-    const unitPrice =
+            const updatedItem = {
 
-      field === "unit_price"
+              ...item,
 
-        ? Number(value)
+              [field]: value,
 
-        : Number(
-            currentItem?.unit_price || 0
-          );
+            };
 
-    const supplierQuantity =
+            // ============================================
+            // VALUES
+            // ============================================
 
-      field === "supplier_quantity"
+            const supplierQuantity =
 
-        ? Number(value)
+              Number(
+                updatedItem.supplier_quantity || 0
+              );
 
-        : Number(
-            currentItem?.supplier_quantity || 0
-          );
+            const conversionFactor =
 
-    const conversionFactor =
+              Number(
+                updatedItem.conversion_factor || 1
+              );
 
-      field === "conversion_factor"
+            const unitPrice =
 
-        ? Number(value)
+              Number(
+                updatedItem.unit_price || 0
+              );
 
-        : Number(
-            currentItem?.conversion_factor || 1
-          );
+            // ============================================
+            // CALCULOS
+            // ============================================
 
-    const equivalentQuantity =
+            const equivalentQuantity =
 
-      supplierQuantity *
-      conversionFactor;
+              supplierQuantity *
+              conversionFactor;
 
-    const total =
+            const total =
 
-      unitPrice *
-      supplierQuantity;
+              supplierQuantity *
+              unitPrice;
 
-    const equivalentUnitPrice =
+            const equivalentUnitPrice =
 
-      equivalentQuantity > 0
+              equivalentQuantity > 0
 
-        ? total / equivalentQuantity
+                ? total /
+                  equivalentQuantity
 
-        : 0;
+                : 0;
 
-    updatedData.total =
-      total;
+            updatedItem.equivalent_quantity =
+              equivalentQuantity;
 
-    updatedData.equivalent_quantity =
-      equivalentQuantity;
+            updatedItem.total =
+              total;
 
-    updatedData.equivalent_unit_price =
-      equivalentUnitPrice;
+            updatedItem.equivalent_unit_price =
+              equivalentUnitPrice;
 
-    await supabase
+            return updatedItem;
 
-      .from("purchase_quote_items")
+          }
+        ),
 
-      .update(updatedData)
+    })
+  );
 
-      .eq("id", itemId);
+  // ============================================
+  // UPDATE UI
+  // ============================================
 
-  }
+  setQuotes(updatedQuotes);
+
+  // ============================================
+  // FIND UPDATED ITEM
+  // ============================================
+
+  const updatedItem =
+
+    updatedQuotes
+
+      .flatMap(
+        (q) =>
+          q.purchase_quote_items
+      )
+
+      .find(
+        (item: any) =>
+          item.id === itemId
+      );
+
+  if (!updatedItem) return;
+
+  // ============================================
+  // SAVE DB
+  // ============================================
+
+  await supabase
+
+    .from("purchase_quote_items")
+
+    .update({
+
+      supplier_quantity:
+        updatedItem.supplier_quantity,
+
+      conversion_factor:
+        updatedItem.conversion_factor,
+
+      unit_price:
+        updatedItem.unit_price,
+
+      equivalent_quantity:
+        updatedItem.equivalent_quantity,
+
+      total:
+        updatedItem.total,
+
+      equivalent_unit_price:
+        updatedItem.equivalent_unit_price,
+
+      observations:
+        updatedItem.observations,
+
+      supplier_um:
+        updatedItem.supplier_um,
+
+    })
+
+    .eq("id", itemId);
+
+}
+
 
   // =====================================================
   // SAVE QUOTE
