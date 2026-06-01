@@ -1,8 +1,7 @@
-
-
-
 "use client";
-export const dynamic = "force-dynamic"; export const revalidate = 0;
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -29,9 +28,7 @@ export default function PurchaseQuotesPage() {
   useEffect(() => {
 
     if (id) {
-
       fetchData();
-
     }
 
   }, [id]);
@@ -45,8 +42,6 @@ export default function PurchaseQuotesPage() {
     try {
 
       setLoading(true);
-
-      // PURCHASE
 
       const { data: purchaseData } = await supabase
 
@@ -63,8 +58,6 @@ export default function PurchaseQuotesPage() {
 
       setPurchase(purchaseData);
 
-      // SUPPLIERS
-
       const { data: suppliersData } = await supabase
 
         .from("suppliers")
@@ -75,8 +68,6 @@ export default function PurchaseQuotesPage() {
 
       setSuppliers(suppliersData || []);
 
-      // UNITS
-
       const { data: unitsData } = await supabase
 
         .from("units_of_measure")
@@ -86,8 +77,6 @@ export default function PurchaseQuotesPage() {
         .order("code");
 
       setUnits(unitsData || []);
-
-      // QUOTES
 
       const { data: quotesData } = await supabase
 
@@ -122,37 +111,14 @@ export default function PurchaseQuotesPage() {
   }
 
   // =====================================================
-  // WORKFLOW
-  // =====================================================
-
-  async function updateWorkflowStatus(
-    status: string
-  ) {
-
-    await supabase
-
-      .from("purchase_requests")
-
-      .update({
-        workflow_status: status,
-      })
-
-      .eq("id", id);
-
-  }
-
-  // =====================================================
   // CREATE SUPPLIER
   // =====================================================
 
   async function createSupplier() {
 
     if (!supplierName.trim()) {
-
       alert("Ingrese proveedor");
-
       return;
-
     }
 
     const { error } = await supabase
@@ -167,14 +133,9 @@ export default function PurchaseQuotesPage() {
       ]);
 
     if (error) {
-
       alert(error.message);
-
       return;
-
     }
-
-    alert("Proveedor creado");
 
     setSupplierName("");
     setSupplierNit("");
@@ -212,11 +173,8 @@ export default function PurchaseQuotesPage() {
       .single();
 
     if (error) {
-
       alert(error.message);
-
       return;
-
     }
 
     const quoteItems =
@@ -241,14 +199,7 @@ export default function PurchaseQuotesPage() {
 
           conversion_factor: 1,
 
-          equivalent_quantity:
-            item.quantity || 1,
-
           unit_price: 0,
-
-          total: 0,
-
-          equivalent_unit_price: 0,
 
           observations: "",
 
@@ -262,8 +213,6 @@ export default function PurchaseQuotesPage() {
       .from("purchase_quote_items")
 
       .insert(quoteItems);
-
-    alert("Cotización creada");
 
     fetchData();
 
@@ -295,169 +244,88 @@ export default function PurchaseQuotesPage() {
   // UPDATE ITEM
   // =====================================================
 
-async function updateQuoteItem(
-  itemId: string,
-  field: string,
-  value: any
-) {
+  async function updateQuoteItem(
+    itemId: string,
+    field: string,
+    value: any
+  ) {
 
-  // ============================================
-  // UPDATE LOCAL STATE
-  // ============================================
+    const updatedQuotes = quotes.map(
+      (quote) => ({
 
-  const updatedQuotes = quotes.map(
-    (quote) => ({
+        ...quote,
 
-      ...quote,
+        purchase_quote_items:
 
-      purchase_quote_items:
-        quote.purchase_quote_items.map(
-          (item: any) => {
+          quote.purchase_quote_items.map(
+            (item: any) => {
 
-            if (item.id !== itemId) {
-              return item;
+              if (item.id !== itemId) {
+                return item;
+              }
+
+              return {
+
+                ...item,
+
+                [field]: value,
+
+              };
+
             }
+          ),
 
-            const updatedItem = {
+      })
+    );
 
-              ...item,
-
-              [field]: value,
-
-            };
-
-            // ============================================
-            // VALUES
-            // ============================================
-
-            const supplierQuantity =
-
-              Number(
-                updatedItem.supplier_quantity || 0
-              );
-
-            const conversionFactor =
-
-              Number(
-                updatedItem.conversion_factor || 1
-              );
-
-            const unitPrice =
-
-              Number(
-                updatedItem.unit_price || 0
-              );
-
-            // ============================================
-            // CALCULOS
-            // ============================================
-
-            const equivalentQuantity =
-
-              supplierQuantity *
-              conversionFactor;
-
-            const total =
-
-              supplierQuantity *
-              unitPrice;
-
-            const equivalentUnitPrice =
-
-              equivalentQuantity > 0
-
-                ? total /
-                  equivalentQuantity
-
-                : 0;
-
-            updatedItem.equivalent_quantity =
-              equivalentQuantity;
-
-            updatedItem.total =
-              total;
-
-            updatedItem.equivalent_unit_price =
-              equivalentUnitPrice;
-
-            return updatedItem;
-
-          }
-        ),
-
-    })
-  );
-
-  // ============================================
-  // UPDATE UI
-  // ============================================
-
-setQuotes(
-  JSON.parse(
-    JSON.stringify(updatedQuotes)
-  )
-);
-
-  // ============================================
-  // FIND UPDATED ITEM
-  // ============================================
-
-  const updatedItem =
-
-    updatedQuotes
-
-      .flatMap(
-        (q) =>
-          q.purchase_quote_items
+    setQuotes(
+      JSON.parse(
+        JSON.stringify(updatedQuotes)
       )
+    );
 
-      .find(
-        (item: any) =>
-          item.id === itemId
-      );
+    const updatedItem =
 
-  if (!updatedItem) return;
+      updatedQuotes
 
-  // ============================================
-  // SAVE DB
-  // ============================================
+        .flatMap(
+          (q) =>
+            q.purchase_quote_items
+        )
 
-  await supabase
+        .find(
+          (item: any) =>
+            item.id === itemId
+        );
 
-    .from("purchase_quote_items")
+    if (!updatedItem) return;
 
-    .update({
+    await supabase
 
-      supplier_quantity:
-        updatedItem.supplier_quantity,
+      .from("purchase_quote_items")
 
-      conversion_factor:
-        updatedItem.conversion_factor,
+      .update({
 
-      unit_price:
-        updatedItem.unit_price,
+        supplier_quantity:
+          updatedItem.supplier_quantity,
 
-      equivalent_quantity:
-        updatedItem.equivalent_quantity,
+        conversion_factor:
+          updatedItem.conversion_factor,
 
-      total:
-        updatedItem.total,
+        unit_price:
+          updatedItem.unit_price,
 
-      equivalent_unit_price:
-        updatedItem.equivalent_unit_price,
+        observations:
+          updatedItem.observations,
 
-      observations:
-        updatedItem.observations,
+        supplier_um:
+          updatedItem.supplier_um,
 
-      supplier_um:
-        updatedItem.supplier_um,
+      })
 
-    })
+      .eq("id", itemId);
 
-    .eq("id", itemId);
-
-}
-
+  }
 
   // =====================================================
   // SAVE QUOTE
@@ -479,327 +347,8 @@ setQuotes(
 
     alert("Cotización guardada");
 
-    fetchData();
-
   }
 
-  // =====================================================
-  // SELECT WINNER
-  // =====================================================
-
-  async function selectWinner(
-    quoteItemId: string
-  ) {
-
-    const quoteItem =
-
-      quotes
-
-        .flatMap((q) => q.purchase_quote_items)
-
-        .find(
-          (item: any) =>
-            item.id === quoteItemId
-        );
-
-    if (!quoteItem) return;
-
-    await supabase
-
-      .from("purchase_quote_items")
-
-      .update({
-        selected: false,
-      })
-
-      .eq(
-        "request_item_id",
-        quoteItem.request_item_id
-      );
-
-    await supabase
-
-      .from("purchase_quote_items")
-
-      .update({
-        selected: true,
-      })
-
-      .eq("id", quoteItemId);
-
-await updateWorkflowStatus(
-  "Comparativo generado"
-);
-
-await fetchData();
-
-alert("Proveedor adjudicado");
-
-  }
-
-  // =====================================================
-  // AUTO AWARD
-  // =====================================================
-
-  async function autoAward() {
-
-    for (const requestItem of purchase.purchase_request_items) {
-
-      const itemQuotes =
-
-        quotes
-
-          .flatMap((q) => q.purchase_quote_items)
-
-          .filter(
-            (item: any) =>
-              item.request_item_id ===
-              requestItem.id
-          );
-
-      if (itemQuotes.length === 0) continue;
-
-      const bestQuote =
-
-        itemQuotes.reduce(
-          (prev: any, current: any) =>
-
-            Number(
-              current.equivalent_unit_price || 0
-            )
-
-            <
-
-            Number(
-              prev.equivalent_unit_price || 0
-            )
-
-              ? current
-
-              : prev
-        );
-
-      await supabase
-
-        .from("purchase_quote_items")
-
-        .update({
-          selected: false,
-        })
-
-        .eq(
-          "request_item_id",
-          requestItem.id
-        );
-
-      await supabase
-
-        .from("purchase_quote_items")
-
-        .update({
-          selected: true,
-        })
-
-        .eq("id", bestQuote.id);
-
-    }
-
-  await updateWorkflowStatus(
-  "Comparativo generado"
-);
-
-await fetchData();
-
-alert(
-  "Cotizaciones sugeridas adjudicadas"
-);
-  }
-async function generatePurchaseOrder() {
-
-  const selectedItems =
-
-    quotes
-
-      .flatMap(
-        (q) =>
-
-          q.purchase_quote_items.map(
-            (item: any) => ({
-
-              ...item,
-
-              supplier_id:
-                q.supplier_id,
-
-              payment_method:
-                q.payment_method,
-
-              delivery_time:
-                q.delivery_time,
-
-            })
-          )
-      )
-
-      .filter(
-        (item: any) =>
-          item.selected
-      );
-
-  if (
-    selectedItems.length === 0
-  ) {
-
-    alert(
-      "No hay items adjudicados"
-    );
-
-    return;
-
-  }
-
-  const supplierId =
-    selectedItems[0].supplier_id;
-
-  const total =
-
-    selectedItems.reduce(
-      (
-        acc: number,
-        item: any
-      ) =>
-
-        acc +
-        Number(
-          item.total || 0
-        ),
-
-      0
-    );
-
-  const ocNumber =
-
-    `OC-${Date.now()}`;
-
-  // CREATE OC
-
-  const {
-    data: oc,
-    error,
-  } = await supabase
-
-    .from(
-      "purchase_orders"
-    )
-
-    .insert([
-      {
-
-        request_id:
-          id,
-
-        supplier_id:
-          supplierId,
-
-        oc_number:
-          ocNumber,
-
-        payment_method:
-          selectedItems[0]
-            .payment_method,
-
-        delivery_time:
-          selectedItems[0]
-            .delivery_time,
-
-        total,
-
-        status:
-          "Abierta",
-
-      },
-    ])
-
-    .select()
-
-    .single();
-
-  if (error) {
-
-    alert(
-      error.message
-    );
-
-    return;
-
-  }
-
-  // CREATE ITEMS
-
-  const orderItems =
-
-    selectedItems.map(
-      (item: any) => ({
-
-        purchase_order_id:
-          oc.id,
-
-        request_item_id:
-          item.request_item_id,
-
-        description:
-          item.supplier_item_description,
-
-        quantity:
-          item.supplier_quantity,
-
-        um:
-          item.supplier_um,
-
-        unit_price:
-          item.unit_price,
-
-        total:
-          item.total,
-
-      })
-    );
-
-  await supabase
-
-    .from(
-      "purchase_order_items"
-    )
-
-    .insert(
-      orderItems
-    );
-
-  await supabase
-
-    .from(
-      "purchase_requests"
-    )
-
-    .update({
-
-      workflow_status:
-        "Finalizada",
-
-    })
-
-    .eq(
-      "id",
-      id
-    );
-
-  alert(
-    `OC generada: ${ocNumber}`
-  );
-
-  fetchData();
-
-}
   // =====================================================
   // LOADING
   // =====================================================
@@ -815,33 +364,6 @@ async function generatePurchaseOrder() {
   }
 
   // =====================================================
-  // WORKFLOW STEPS
-  // =====================================================
-
-const workflowSteps = [
-
-  "Solicitud creada",
-
-  "Aprobada",
-
-  "Comparativo generado",
-
-  "Pendiente financiera",
-
-  "Aprobada financiera",
-
-  "Pendiente comité",
-
-  "OC generada",
-
-];
-
-  const currentWorkflowIndex =
-    workflowSteps.indexOf(
-      purchase?.workflow_status
-    );
-
-  // =====================================================
   // RENDER
   // =====================================================
 
@@ -850,8 +372,7 @@ const workflowSteps = [
     <div className="
       min-h-screen
       bg-[#f5f6f8]
-      p-4
-      lg:p-6
+      p-6
     ">
 
       {/* HEADER */}
@@ -859,11 +380,8 @@ const workflowSteps = [
       <div className="
         mb-6
         flex
-        flex-col
-        gap-4
-        lg:flex-row
-        lg:items-center
-        lg:justify-between
+        items-center
+        justify-between
       ">
 
         <div>
@@ -872,558 +390,25 @@ const workflowSteps = [
             text-3xl
             font-bold
           ">
+
             Cotizaciones
+
           </h1>
 
           <p className="
             mt-2
             text-gray-500
           ">
+
             {
               purchase?.request_number
             }
-          </p>
-
-        </div>
-
-        <button
-          onClick={autoAward}
-          className="
-            rounded-2xl
-            bg-blue-600
-            px-5
-            py-3
-            text-sm
-            font-medium
-            text-white
-          "
-        >
-
-          Adjudicar sugerida
-
-        </button>
-
-      </div>
-
-      {/* WORKFLOW */}
-
-      <div className="
-        mb-6
-        rounded-3xl
-        bg-white
-        p-6
-        shadow-sm
-      ">
-
-        <div className="
-          flex
-          flex-wrap
-          items-center
-          gap-4
-        ">
-
-          {
-            workflowSteps.map(
-              (
-                step,
-                index
-              ) => {
-
-                const active =
-                  index <=
-                  currentWorkflowIndex;
-
-                return (
-
-                  <div
-                    key={step}
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                    "
-                  >
-
-                    <div className={`
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-full
-                      text-sm
-                      font-bold
-
-                      ${
-                        active
-
-                          ? "bg-green-600 text-white"
-
-                          : "bg-gray-200 text-gray-500"
-                      }
-                    `}>
-
-                      {
-                        active
-                          ? "✓"
-                          : index + 1
-                      }
-
-                    </div>
-
-                    <p className={`
-                      text-sm
-                      font-medium
-
-                      ${
-                        active
-                          ? "text-gray-900"
-                          : "text-gray-400"
-                      }
-                    `}>
-
-                      {step}
-
-                    </p>
-
-                  </div>
-
-                );
-
-              }
-            )
-          }
-
-        </div>
-
-      </div>
-
-      {/* COMMITTEE */}
-
-{
-  purchase?.workflow_status ===
-  "Aprobada financiera"
-
-  &&
-
-  (
-
-    <div className="
-      mb-6
-      rounded-3xl
-      bg-white
-      p-6
-      shadow-sm
-    ">
-
-      <div className="
-        mb-5
-        flex
-        items-center
-        justify-between
-      ">
-
-        <div>
-
-          <h2 className="
-            text-xl
-            font-bold
-          ">
-
-            Comité de compras
-
-          </h2>
-
-          <p className="
-            mt-1
-            text-sm
-            text-gray-500
-          ">
-
-            Validación corporativa final
 
           </p>
 
         </div>
 
-        <div className={`
-          rounded-full
-          px-4
-          py-2
-          text-sm
-          font-medium
-
-          ${
-            purchase.committee_status === "Aprobado"
-
-              ? "bg-green-100 text-green-700"
-
-              : purchase.committee_status === "Rechazado"
-
-              ? "bg-red-100 text-red-700"
-
-              : "bg-yellow-100 text-yellow-700"
-          }
-        `}>
-
-          {
-            purchase.committee_status || "Pendiente"
-          }
-
-        </div>
-
       </div>
-
-      {/* REQUIRE COMMITTEE */}
-
-      <div className="
-        mb-6
-        rounded-2xl
-        border
-        border-gray-200
-        p-5
-      ">
-
-        <label className="
-          mb-3
-          block
-          text-sm
-          font-medium
-        ">
-
-          ¿Requiere comité?
-
-        </label>
-
-        <div className="
-          flex
-          flex-wrap
-          gap-3
-        ">
-
-          <button
-            onClick={async () => {
-
-              await supabase
-
-                .from(
-                  "purchase_requests"
-                )
-
-                .update({
-
-                  committee_required:
-                    true,
-
-                  workflow_status:
-                    "Pendiente comité",
-
-                })
-
-                .eq(
-                  "id",
-                  id
-                );
-
-              await fetchData();
-
-            }}
-            className="
-              rounded-2xl
-              bg-blue-600
-              px-5
-              py-3
-              text-sm
-              font-medium
-              text-white
-            "
-          >
-
-            Sí requiere
-
-          </button>
-
-          <button
-            onClick={async () => {
-
-              await supabase
-
-                .from(
-                  "purchase_requests"
-                )
-
-                .update({
-
-                  committee_required:
-                    false,
-
-                  workflow_status:
-                    "OC generada",
-
-                })
-
-                .eq(
-                  "id",
-                  id
-                );
-
-              await fetchData();
-
-            }}
-            className="
-              rounded-2xl
-              bg-gray-800
-              px-5
-              py-3
-              text-sm
-              font-medium
-              text-white
-            "
-          >
-
-            No requiere
-
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* COMMITTEE DECISION */}
-
-      {
-        purchase?.workflow_status ===
-        "Pendiente comité"
-
-        &&
-
-        (
-
-          <div className="
-            rounded-2xl
-            border
-            border-gray-200
-            p-5
-          ">
-
-            <textarea
-              defaultValue={
-                purchase.committee_comment || ""
-              }
-              onBlur={async (e) => {
-
-                await supabase
-
-                  .from(
-                    "purchase_requests"
-                  )
-
-                  .update({
-                    committee_comment:
-                      e.target.value,
-                  })
-
-                  .eq(
-                    "id",
-                    id
-                  );
-
-              }}
-              rows={4}
-              placeholder="Comentarios comité"
-              className="
-                w-full
-                rounded-2xl
-                border
-                border-gray-200
-                p-4
-                text-sm
-              "
-            />
-
-            <div className="
-              mt-5
-              flex
-              flex-wrap
-              gap-3
-            ">
-
-              <button
-                onClick={async () => {
-
-                  await supabase
-
-                    .from(
-                      "purchase_requests"
-                    )
-
-                    .update({
-
-                      committee_status:
-                        "Aprobado",
-
-                      workflow_status:
-                        "OC generada",
-
-                      committee_date:
-                        new Date(),
-
-                    })
-
-                    .eq(
-                      "id",
-                      id
-                    );
-
-                  await fetchData();
-
-                }}
-                className="
-                  rounded-2xl
-                  bg-green-600
-                  px-5
-                  py-3
-                  text-sm
-                  font-medium
-                  text-white
-                "
-              >
-
-                Aprobar comité
-
-              </button>
-
-              <button
-                onClick={async () => {
-
-                  await supabase
-
-                    .from(
-                      "purchase_requests"
-                    )
-
-                    .update({
-
-                      committee_status:
-                        "Rechazado",
-
-                      workflow_status:
-                        "Comité rechazado",
-
-                      committee_date:
-                        new Date(),
-
-                    })
-
-                    .eq(
-                      "id",
-                      id
-                    );
-
-                  await fetchData();
-
-                }}
-                className="
-                  rounded-2xl
-                  bg-red-600
-                  px-5
-                  py-3
-                  text-sm
-                  font-medium
-                  text-white
-                "
-              >
-
-                Rechazar comité
-
-              </button>
-
-            </div>
-
-          </div>
-
-        )
-      }
-
-    </div>
-
-  )
-}
-{/* PURCHASE ORDER */}
-
-{
-  purchase?.workflow_status ===
-  "OC generada"
-
-  &&
-
-  (
-
-    <div className="
-      mb-6
-      rounded-3xl
-      bg-white
-      p-6
-      shadow-sm
-    ">
-
-      <div className="
-        flex
-        flex-col
-        gap-4
-        lg:flex-row
-        lg:items-center
-        lg:justify-between
-      ">
-
-        <div>
-
-          <h2 className="
-            text-2xl
-            font-bold
-          ">
-
-            Orden de compra
-
-          </h2>
-
-          <p className="
-            mt-1
-            text-sm
-            text-gray-500
-          ">
-
-            Lista para generación
-
-          </p>
-
-        </div>
-
-        <button
-          onClick={
-            generatePurchaseOrder
-          }
-          className="
-            rounded-2xl
-            bg-black
-            px-6
-            py-3
-            text-sm
-            font-medium
-            text-white
-          "
-        >
-
-          Generar OC
-
-        </button>
-
-      </div>
-
-    </div>
-
-  )
-}
 
       {/* CREATE SUPPLIER */}
 
@@ -1546,107 +531,28 @@ const workflowSteps = [
 
       </div>
 
-      {/* MOBILE VIEW */}
+      {/* TABLE */}
 
       <div className="
-        space-y-6
-        lg:hidden
+        overflow-auto
+        rounded-3xl
+        bg-white
+        shadow-sm
       ">
-
-        {
-          purchase?.purchase_request_items?.map(
-            (requestItem: any) => (
-
-              <div
-                key={requestItem.id}
-                className="
-                  rounded-3xl
-                  bg-white
-                  p-5
-                  shadow-sm
-                "
-              >
-
-                <h2 className="
-                  text-lg
-                  font-bold
-                ">
-
-                  {
-                    requestItem.description
-                  }
-
-                </h2>
-
-                <div className="
-                  mt-2
-                  inline-flex
-                  rounded-full
-                  bg-gray-100
-                  px-3
-                  py-1
-                  text-xs
-                  text-gray-600
-                ">
-
-                  Solicitud:
-                  {" "}
-                  {
-                    requestItem.quantity
-                  }
-
-                  {" "}
-
-                  {
-                    requestItem.um || "UND"
-                  }
-
-                </div>
-
-              </div>
-
-            )
-          )
-        }
-
-      </div>
-
-      {/* DESKTOP */}
-
-      <div
-        className="
-          hidden
-          overflow-auto
-          rounded-3xl
-          bg-white
-          shadow-sm
-          lg:block
-        "
-      >
 
         <table className="
           min-w-full
           border-collapse
         ">
 
-          <thead className="
-            sticky
-            top-0
-            z-30
-            bg-gray-50
-          ">
+          <thead className="bg-gray-50">
 
             <tr>
 
               <th className="
-                sticky
-                left-0
-                top-0
-                z-40
                 min-w-[240px]
                 border-b
                 border-r
-                bg-gray-50
                 p-5
                 text-left
               ">
@@ -1687,10 +593,10 @@ const workflowSteps = [
                         </p>
 
                         <input
-                          defaultValue={
-                            quote.delivery_time
+                          value={
+                            quote.delivery_time || ""
                           }
-                          onBlur={(e) =>
+                          onChange={(e) =>
                             updateQuoteHeader(
                               quote.id,
                               "delivery_time",
@@ -1710,7 +616,7 @@ const workflowSteps = [
                         />
 
                         <select
-                          defaultValue={
+                          value={
                             quote.payment_method || ""
                           }
                           onChange={(e) =>
@@ -1799,14 +705,8 @@ const workflowSteps = [
                     className="border-b"
                   >
 
-                    {/* ITEM */}
-
                     <td className="
-                      sticky
-                      left-0
-                      z-20
                       border-r
-                      bg-white
                       p-5
                       align-top
                     ">
@@ -1816,7 +716,6 @@ const workflowSteps = [
                         <p className="
                           text-sm
                           font-semibold
-                          text-gray-900
                         ">
 
                           {
@@ -1825,36 +724,9 @@ const workflowSteps = [
 
                         </p>
 
-                        <div className="
-                          mt-3
-                          inline-flex
-                          rounded-full
-                          bg-gray-100
-                          px-3
-                          py-1
-                          text-xs
-                          text-gray-600
-                        ">
-
-                          Cantidad:
-                          {" "}
-                          {
-                            requestItem.quantity
-                          }
-
-                          {" "}
-
-                          {
-                            requestItem.um || "UND"
-                          }
-
-                        </div>
-
                       </div>
 
                     </td>
-
-                    {/* QUOTES */}
 
                     {
                       quotes.map(
@@ -1886,52 +758,37 @@ const workflowSteps = [
 
                           }
 
-                          const allQuoteItems =
-
-                            quotes
-
-                              .flatMap(
-                                (q) =>
-                                  q.purchase_quote_items
-                              )
-
-                              .filter(
-                                (item: any) =>
-                                  item.request_item_id ===
-                                  requestItem.id
-                              );
-
-                          const suggestedPrice =
-
-                            Math.min(
-                              ...allQuoteItems
-
-                                .map(
-                                  (item: any) =>
-                                    Number(
-                                      item.equivalent_unit_price || 0
-                                    )
-                                )
-
-                                .filter(
-                                  (value) =>
-                                    value > 0
-                                )
-                            );
-
-                          const isSuggested =
+                          const equivalentQuantity =
 
                             Number(
-                              quoteItem.equivalent_unit_price || 0
+                              quoteItem.supplier_quantity || 0
                             )
 
-                            ===
+                            *
 
-                            suggestedPrice
+                            Number(
+                              quoteItem.conversion_factor || 0
+                            );
 
-                            &&
+                          const total =
 
-                            suggestedPrice > 0;
+                            Number(
+                              quoteItem.supplier_quantity || 0
+                            )
+
+                            *
+
+                            Number(
+                              quoteItem.unit_price || 0
+                            );
+
+                          const equivalentPrice =
+
+                            equivalentQuantity > 0
+
+                              ? total / equivalentQuantity
+
+                              : 0;
 
                           return (
 
@@ -1948,225 +805,97 @@ const workflowSteps = [
                                 space-y-4
                               ">
 
-                                {/* SUPPLIER QUANTITY */}
+                                {/* QTY */}
 
-                                <div>
-
-                                  <label className="
-                                    mb-1
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-gray-500
-                                  ">
-
-                                    Cantidad proveedor
-
-                                  </label>
-
-                                  <input
-                                    type="number"
-value={
-  quoteItem.supplier_quantity || ""
-}
-onChange={(e) =>
-  updateQuoteItem(
-    quoteItem.id,
-    "supplier_quantity",
-    Number(e.target.value)
-  )
-}
-
-                                    onBlur={(e) =>
-                                      updateQuoteItem(
-                                        quoteItem.id,
-                                        "supplier_quantity",
-                                        Number(
-                                          e.target.value
-                                        )
-                                      )
-                                    }
-                                    className="
-                                      h-10
-                                      w-full
-                                      rounded-xl
-                                      border
-                                      border-gray-200
-                                      px-3
-                                      text-sm
-                                    "
-                                  />
-
-                                </div>
+                                <input
+                                  type="number"
+                                  value={
+                                    quoteItem.supplier_quantity || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateQuoteItem(
+                                      quoteItem.id,
+                                      "supplier_quantity",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                  className="
+                                    h-10
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-gray-200
+                                    px-3
+                                  "
+                                />
 
                                 {/* UM */}
 
-                                <div>
+                                <select
+                                  value={
+                                    quoteItem.supplier_um || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateQuoteItem(
+                                      quoteItem.id,
+                                      "supplier_um",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="
+                                    h-10
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-gray-200
+                                    px-3
+                                  "
+                                >
 
-                                  <label className="
-                                    mb-1
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-gray-500
-                                  ">
+                                  {
+                                    units.map(
+                                      (unit: any) => (
 
-                                    UM proveedor
+                                        <option
+                                          key={unit.id}
+                                          value={unit.code}
+                                        >
 
-                                  </label>
+                                          {
+                                            unit.code
+                                          }
 
-                                  <div className="
-                                    flex
-                                    gap-2
-                                  ">
+                                        </option>
 
-                                    <select
-                                      defaultValue={
-                                        quoteItem.supplier_um || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateQuoteItem(
-                                          quoteItem.id,
-                                          "supplier_um",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="
-                                        h-10
-                                        w-full
-                                        rounded-xl
-                                        border
-                                        border-gray-200
-                                        px-3
-                                        text-sm
-                                      "
-                                    >
+                                      )
+                                    )
+                                  }
 
-                                      <option value="">
-                                        Seleccionar UM
-                                      </option>
-
-                                      {
-                                        units.map(
-                                          (unit: any) => (
-
-                                            <option
-                                              key={unit.id}
-                                              value={unit.code}
-                                            >
-
-                                              {
-                                                unit.code
-                                              }
-
-                                            </option>
-
-                                          )
-                                        )
-                                      }
-
-                                    </select>
-
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-
-                                        const code =
-                                          prompt(
-                                            "Nueva unidad"
-                                          );
-
-                                        if (!code) return;
-
-                                        const upperCode =
-                                          code.toUpperCase();
-
-                                        await supabase
-
-                                          .from(
-                                            "units_of_measure"
-                                          )
-
-                                          .insert([
-                                            {
-                                              code:
-                                                upperCode,
-
-                                              description:
-                                                upperCode,
-                                            },
-                                          ]);
-
-                                        fetchData();
-
-                                      }}
-                                      className="
-                                        rounded-xl
-                                        bg-black
-                                        px-4
-                                        text-white
-                                      "
-                                    >
-
-                                      +
-
-                                    </button>
-
-                                  </div>
-
-                                </div>
+                                </select>
 
                                 {/* FACTOR */}
 
-                                <div>
-
-                                  <label className="
-                                    mb-1
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-gray-500
-                                  ">
-
-                                    Factor conversión
-
-                                  </label>
-
-                                  <input
-                                    type="number"
-                                   
-value={
-  quoteItem.conversion_factor || ""
-}
-onChange={(e) =>
-  updateQuoteItem(
-    quoteItem.id,
-    "conversion_factor",
-    Number(e.target.value)
-  )
-}
-
-                                    onBlur={(e) =>
-                                      updateQuoteItem(
-                                        quoteItem.id,
-                                        "conversion_factor",
-                                        Number(
-                                          e.target.value
-                                        )
-                                      )
-                                    }
-                                    className="
-                                      h-10
-                                      w-full
-                                      rounded-xl
-                                      border
-                                      border-gray-200
-                                      px-3
-                                      text-sm
-                                    "
-                                  />
-
-                                </div>
+                                <input
+                                  type="number"
+                                  value={
+                                    quoteItem.conversion_factor || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateQuoteItem(
+                                      quoteItem.id,
+                                      "conversion_factor",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                  className="
+                                    h-10
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-gray-200
+                                    px-3
+                                  "
+                                />
 
                                 {/* EQUIVALENT */}
 
@@ -2178,9 +907,7 @@ onChange={(e) =>
 
                                   <p className="
                                     text-xs
-                                    uppercase
-                                    tracking-wider
-                                    text-blue-400
+                                    text-blue-500
                                   ">
 
                                     Cantidad equivalente
@@ -2189,79 +916,42 @@ onChange={(e) =>
 
                                   <p className="
                                     mt-2
-                                    text-xl
+                                    text-2xl
                                     font-bold
                                     text-blue-700
                                   ">
 
                                     {
-                                      Number(
-                                        quoteItem.supplier_quantity || 0
-                                      )
-
-                                      *
-
-                                      Number(
-                                        quoteItem.conversion_factor || 0
-                                      )
+                                      equivalentQuantity
                                     }
 
                                   </p>
 
                                 </div>
 
-                                {/* UNIT PRICE */}
+                                {/* PRICE */}
 
-                                <div>
-
-                                  <label className="
-                                    mb-1
-                                    block
-                                    text-xs
-                                    font-medium
-                                    text-gray-500
-                                  ">
-
-                                    Valor unitario
-
-                                  </label>
-
-                                  <input
-                                    type="number"
-                                   
-
-value={
-  quoteItem.unit_price || ""
-}
-onChange={(e) =>
-  updateQuoteItem(
-    quoteItem.id,
-    "unit_price",
-    Number(e.target.value)
-  )
-}
-
-                                    onBlur={(e) =>
-                                      updateQuoteItem(
-                                        quoteItem.id,
-                                        "unit_price",
-                                        Number(
-                                          e.target.value
-                                        )
-                                      )
-                                    }
-                                    className="
-                                      h-11
-                                      w-full
-                                      rounded-xl
-                                      border
-                                      border-gray-200
-                                      px-3
-                                      text-sm
-                                    "
-                                  />
-
-                                </div>
+                                <input
+                                  type="number"
+                                  value={
+                                    quoteItem.unit_price || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateQuoteItem(
+                                      quoteItem.id,
+                                      "unit_price",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                  className="
+                                    h-10
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-gray-200
+                                    px-3
+                                  "
+                                />
 
                                 {/* TOTAL */}
 
@@ -2273,8 +963,6 @@ onChange={(e) =>
 
                                   <p className="
                                     text-xs
-                                    uppercase
-                                    tracking-wider
                                     text-gray-400
                                   ">
 
@@ -2286,17 +974,12 @@ onChange={(e) =>
                                     mt-2
                                     text-2xl
                                     font-bold
-                                    text-gray-900
                                   ">
 
                                     ${" "}
 
                                     {
-                                      Number(
-                                        quoteItem.total || 0
-                                      )
-
-                                      .toLocaleString(
+                                      total.toLocaleString(
                                         "es-CO",
                                         {
                                           minimumFractionDigits: 2,
@@ -2312,19 +995,10 @@ onChange={(e) =>
                                 {/* OBS */}
 
                                 <textarea
-                                 
-value={
-  quoteItem.observations || ""
-}
-onChange={(e) =>
-  updateQuoteItem(
-    quoteItem.id,
-    "observations",
-    e.target.value
-  )
-}
-
-                                  onBlur={(e) =>
+                                  value={
+                                    quoteItem.observations || ""
+                                  }
+                                  onChange={(e) =>
                                     updateQuoteItem(
                                       quoteItem.id,
                                       "observations",
@@ -2338,9 +1012,7 @@ onChange={(e) =>
                                     border
                                     border-gray-200
                                     p-3
-                                    text-sm
                                   "
-                                  placeholder="Observaciones"
                                 />
 
                                 {/* EQUIVALENT PRICE */}
@@ -2353,9 +1025,7 @@ onChange={(e) =>
 
                                   <p className="
                                     text-xs
-                                    uppercase
-                                    tracking-wider
-                                    text-yellow-500
+                                    text-yellow-600
                                   ">
 
                                     Precio equivalente
@@ -2364,7 +1034,7 @@ onChange={(e) =>
 
                                   <p className="
                                     mt-2
-                                    text-xl
+                                    text-2xl
                                     font-bold
                                     text-yellow-700
                                   ">
@@ -2372,11 +1042,7 @@ onChange={(e) =>
                                     ${" "}
 
                                     {
-                                      Number(
-                                        quoteItem.equivalent_unit_price || 0
-                                      )
-
-                                      .toLocaleString(
+                                      equivalentPrice.toLocaleString(
                                         "es-CO",
                                         {
                                           minimumFractionDigits: 2,
@@ -2388,90 +1054,6 @@ onChange={(e) =>
                                   </p>
 
                                 </div>
-
-                                {/* SUGGESTED */}
-
-                                {
-                                  isSuggested && (
-
-                                    <div className="
-                                      rounded-xl
-                                      border
-                                      border-blue-200
-                                      bg-blue-50
-                                      px-3
-                                      py-2
-                                      text-sm
-                                      font-medium
-                                      text-blue-700
-                                    ">
-
-                                      ⭐ Mejor oferta sugerida
-
-                                    </div>
-
-                                  )
-                                }
-
-                                {/* WINNER */}
-
-                                {
-                                  quoteItem.selected && (
-
-                                    <div className="
-                                      rounded-xl
-                                      border
-                                      border-green-200
-                                      bg-green-50
-                                      px-3
-                                      py-2
-                                      text-sm
-                                      font-medium
-                                      text-green-700
-                                    ">
-
-                                      ✓ Oferta adjudicada
-
-                                    </div>
-
-                                  )
-                                }
-
-                                {/* BUTTON */}
-
-                                <button
-                                  onClick={() =>
-                                    selectWinner(
-                                      quoteItem.id
-                                    )
-                                  }
-                                  className={`
-                                    h-11
-                                    w-full
-                                    rounded-xl
-                                    text-sm
-                                    font-medium
-                                    text-white
-
-                                    ${
-                                      quoteItem.selected
-
-                                        ? "bg-green-600"
-
-                                        : "bg-black"
-                                    }
-                                  `}
-                                >
-
-                                  {
-                                    quoteItem.selected
-
-                                      ? "Proveedor adjudicado"
-
-                                      : "Adjudicar proveedor"
-                                  }
-
-                                </button>
 
                               </div>
 
