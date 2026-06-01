@@ -1966,9 +1966,17 @@ const workflowSteps = [
 
                                   <input
                                     type="number"
-                                    defaultValue={
-                                      quoteItem.supplier_quantity || ""
-                                    }
+value={
+  quoteItem.supplier_quantity || ""
+}
+onChange={(e) =>
+  updateQuoteItem(
+    quoteItem.id,
+    "supplier_quantity",
+    Number(e.target.value)
+  )
+}
+
                                     onBlur={(e) =>
                                       updateQuoteItem(
                                         quoteItem.id,
@@ -2126,9 +2134,18 @@ const workflowSteps = [
 
                                   <input
                                     type="number"
-                                    defaultValue={
-                                      quoteItem.conversion_factor || ""
-                                    }
+                                   
+value={
+  quoteItem.conversion_factor || ""
+}
+onChange={(e) =>
+  updateQuoteItem(
+    quoteItem.id,
+    "conversion_factor",
+    Number(e.target.value)
+  )
+}
+
                                     onBlur={(e) =>
                                       updateQuoteItem(
                                         quoteItem.id,
@@ -2211,9 +2228,19 @@ const workflowSteps = [
 
                                   <input
                                     type="number"
-                                    defaultValue={
-                                      quoteItem.unit_price || ""
-                                    }
+                                   
+
+value={
+  quoteItem.unit_price || ""
+}
+onChange={(e) =>
+  updateQuoteItem(
+    quoteItem.id,
+    "unit_price",
+    Number(e.target.value)
+  )
+}
+
                                     onBlur={(e) =>
                                       updateQuoteItem(
                                         quoteItem.id,
@@ -2285,9 +2312,18 @@ const workflowSteps = [
                                 {/* OBS */}
 
                                 <textarea
-                                  defaultValue={
-                                    quoteItem.observations
-                                  }
+                                 
+value={
+  quoteItem.observations || ""
+}
+onChange={(e) =>
+  updateQuoteItem(
+    quoteItem.id,
+    "observations",
+    e.target.value
+  )
+}
+
                                   onBlur={(e) =>
                                     updateQuoteItem(
                                       quoteItem.id,
